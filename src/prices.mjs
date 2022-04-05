@@ -1,5 +1,6 @@
 import "./polyfills.mjs";
 import express from "express";
+import { Temporal } from "@js-temporal/polyfill";
 
 // Refactor the following code to get rid of the legacy Date class.
 // Use Temporal.PlainDate instead. See /test/date_conversion.spec.mjs for examples.
@@ -18,7 +19,7 @@ function createApp(database) {
     const age = req.query.age;
     const type = req.query.type;
     const baseCost = database.findBasePriceByType(type).cost;
-    const date = parseDate(req.query.date);
+    const date = parseDateToTemporalDate(req.query.date);
     const cost = calculateCost(age, type, date, baseCost);
     res.json({ cost });
   });
@@ -26,6 +27,16 @@ function createApp(database) {
   function parseDate(dateString) {
     if (dateString) {
       return new Date(dateString);
+    }
+  }
+
+  function parseDateToTemporalDate(dateString) {
+    if (dateString) {
+      return new Temporal.PlainDate(
+        parseInt(dateString.split("-", 3)[0]),
+        parseInt(dateString.split("-", 3)[1]),
+        parseInt(dateString.split("-", 3)[2])
+      );
     }
   }
 
@@ -76,7 +87,7 @@ function createApp(database) {
   }
 
   function isMonday(date) {
-    return date.getDay() === 1;
+    return date.dayOfWeek === 1;
   }
 
   function isHoliday(date) {
